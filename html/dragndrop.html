@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="dragndrop.css">
   </head>
 <body>
-<form method="post" action="http://localhost:3000/upload" enctype="multipart/form-data">
+<form id="upload" method="post" action="http://localhost:3000/upload" enctype="multipart/form-data">
     <div>
         <label for="file">Choose file to upload</label>
         <input type="file" id="file2" name="file2" multiple />
@@ -24,6 +24,44 @@
 </div>
 
 <script>
+    const uploadForm = document.getElementById("upload");
+    const fileField = document.getElementById("file2");
+    const formData = new FormData();
+
+    function handleSubmit(ev) {
+        ev.preventDefault();
+
+        if (formData.has('file2') == true) {
+            // file has been drag and dropped
+        } else {
+            console.log(uploadForm);
+            console.log(uploadForm.file2);
+            console.log(uploadForm.file2.files);
+            console.log(uploadForm.file2.files[0]);
+            formData.append("file2", uploadForm.file2.files[0]);
+        }
+
+        console.log(formData);
+
+        // this needs CORS properly setup
+        // which is not the case when using pure HTML submit
+        // form
+        fetch("http://localhost:3000/upload", {
+            method: "post",
+            body: formData,
+        }).catch((error) => ("Something went wrong!", error));
+
+    }
+
+    uploadForm.addEventListener("submit", handleSubmit);
+
+    // TODO: clumsy action and naming, to clean
+    function handleDrop(file) {
+        console.log(file);
+        console.log(`… filename = ${file.name}`);
+        formData.append('file2', file);
+    }
+
     function dropHandler(ev) {
         console.log("File(s) dropped");
 
@@ -36,13 +74,13 @@
                 // If dropped items aren't files, reject them
                 if (item.kind === "file") {
                     const file = item.getAsFile();
-                    console.log(`… file[${i}].name = ${file.name}`);
+                    handleDrop(file);
                 }
             });
         } else {
             // Use DataTransfer interface to access the file(s)
             [...ev.dataTransfer.files].forEach((file, i) => {
-                console.log(`… file[${i}].name = ${file.name}`);
+                handleDrop(file);
             });
         }
     }
